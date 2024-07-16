@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/grafana/dskit/backoff"
@@ -43,6 +44,24 @@ const (
 	flushReasonFull     = "full"
 	flushReasonSynced   = "synced"
 )
+
+// I don't know if this needs to be private but I only needed it in this package.
+type flushReasonCounter struct {
+	flushReasonIdle     int
+	flushReasonMaxAge   int
+	flushReasonForced   int
+	flushReasonNotOwned int
+	flushReasonFull     int
+	flushReasonSynced   int
+}
+
+func (f *flushReasonCounter) String() string {
+
+}
+
+func (f *flushReasonCounter) IncrementForReason(reason string) error {
+
+}
 
 // Note: this is called both during the WAL replay (zero or more times)
 // and then after replay as well.
@@ -220,8 +239,23 @@ func (i *Ingester) flushUserSeries(ctx context.Context, userID string, fp model.
 		return nil
 	}
 
+	totalCompressedSize := 0
+	for _, c := range chunks {
+		totalCompressedSize += c.chunk.CompressedSize()
+
+	}
+	avgCompressed := totalCompressedSize / len(chunks)
+
 	lbs := labels.String()
-	level.Info(i.logger).Log("msg", "flushing stream", "user", userID, "fp", fp, "immediate", immediate, "num_chunks", len(chunks), "labels", lbs)
+	level.Info(i.logger).Log(
+		"msg", "flushing stream",
+		"user", userID,
+		"fp", fp,
+		"immediate", immediate,
+		"num_chunks", len(chunks),
+		"total_compressed", humanize.Bytes(uint64(totalCompressedSize)),
+		"avg_compressed", humanize.Bytes(uint64(avgCompressed)),
+		"labels", lbs)
 
 	ctx = user.InjectOrgID(ctx, userID)
 	ctx, cancelFunc := context.WithTimeout(ctx, i.cfg.FlushOpTimeout)
