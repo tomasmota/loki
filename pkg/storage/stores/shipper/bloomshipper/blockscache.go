@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	defaultPurgeInterval = 1 * time.Minute
+	defaultPurgeInterval = 5 * time.Minute
 
 	// eviction reasons
 	reasonExpired = "expired"
