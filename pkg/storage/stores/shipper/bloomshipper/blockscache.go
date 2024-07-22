@@ -281,8 +281,12 @@ func (c *BlocksCache) evict(key string, element *list.Element, reason string) {
 		level.Error(c.logger).Log("msg", "failed to remove entry from disk", "err", err)
 		return
 	}
+	lenList := c.lru.Len()
 	c.lru.Remove(element)
+	lenMap := len(c.entries)
 	delete(c.entries, key)
+	level.Info(c.logger).Log("msg", "evict cache key", "key", key, "len_list_before", lenList, "len_list_after", c.lru.Len(), "len_map_before", lenMap, "len_map_after", len(c.entries))
+
 	c.currSizeBytes -= entry.Value.Size()
 	c.metrics.entriesCurrent.Dec()
 	c.metrics.entriesEvicted.WithLabelValues(reason).Inc()
