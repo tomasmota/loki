@@ -325,7 +325,7 @@ func (f *Fetcher) processTask(ctx context.Context, task downloadRequest[BlockRef
 	// check if block was fetched while task was waiting in queue
 	result, exists, err := f.fromCache(ctx, task.key)
 	if err != nil {
-		level.Error(f.logger).Log("msg", "failed to get block from storage", "key", task.key, "err", err)
+		level.Error(f.logger).Log("msg", "failed to get block from cache", "key", task.key, "err", err)
 		task.errors <- err
 		return
 	}
