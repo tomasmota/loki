@@ -343,7 +343,9 @@ func (f *Fetcher) processTask(ctx context.Context, task downloadRequest[BlockRef
 	// fetch from storage
 	result, err = f.fetchBlock(ctx, task.item)
 	if err != nil {
-		level.Error(f.logger).Log("msg", "failed to get block from storage", "key", task.key, "err", err)
+		if !f.client.IsObjectNotFoundErr(err) {
+			level.Error(f.logger).Log("msg", "failed to get block from storage", "key", task.key, "err", err)
+		}
 		task.errors <- err
 		return
 	}
